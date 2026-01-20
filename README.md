@@ -1,7 +1,7 @@
 
 # Insta.io
 
-[Live Demo](https://instagram-clone-project-two.vercel.app)
+[Live Demo](https://instaio.vercel.app)
 
 A modern full-featured social media platform that looks like Instagram using the MERN stack. Implemented secure user authentication with login, registration, password reset, and account management. Built core social features including profile management, post creation and deletion, likes, comments, and follow/unfollow functionality. Designed a responsive and interactive UI for a seamless user experience across devices. This project helped me improve my full-stack development skills and understand how social networking applications work.
 
