@@ -8,7 +8,7 @@ export default function App() {
 
   if (!initialized) {
     return (
-      <div className="text-md text-purple-600 font-semibold p-6">Loading...</div>
+      <div className="text-md text-purple-600 font-semibold p-6 text-center">Loading...</div>
     );
   }
   
