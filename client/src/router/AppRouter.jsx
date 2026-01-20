@@ -149,10 +149,6 @@ export default function AppRouter() {
               } 
             />
             <Route
-              path="/"
-              element={<Navigate to="/login" replace />}
-            />
-            <Route
               path="*"
               element={<Navigate to="/login" replace />}
             />
