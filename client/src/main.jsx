@@ -16,7 +16,7 @@ createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <GlobalProvider>
         <ToastContainer 
-          position='top-center' 
+          position='top-right' 
           autoClose={2000} 
           newestOnTop
           closeOnClick  
