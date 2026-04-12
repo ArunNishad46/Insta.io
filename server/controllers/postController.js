@@ -47,7 +47,7 @@ export const createPost = async (req, res) => {
 export const getAllPosts = async (req, res) => {
   try {
     const page = Number(req.query.page) || 1;
-    const limit = 2;
+    const limit = 20;
     const skip = (page - 1) * limit;
 
     const posts = await Post.find({}, "media caption likes comments createdAt postedBy")
@@ -122,7 +122,7 @@ export const getMyFeedPosts = async (req, res) => {
   try {
     const userId = req.user._id;
     const page = Number(req.query.page) || 1;
-    const limit = 2;
+    const limit = 20;
     const skip = (page - 1) * limit;
     
     const user = await User.findById(userId).select("following savedPosts");
