@@ -13,7 +13,7 @@ const authMiddleware = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
-    const user = await User.findById(decoded.userId).select("-password -refreshTokens");
+    const user = await User.findById(decoded.userId).select("_id username profileImage");
 
     if (!user) {
       return res.status(401).json({ message: "User not found" });

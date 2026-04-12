@@ -1,17 +1,45 @@
-import React, { useEffect } from "react";
-import { useSelector } from "react-redux";
+import React, { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { useGlobalContext } from "../context/GlobalContext";
 import { Link } from "react-router-dom";
 import PostCard from "../components/PostCard";
 import SkeletonLoader from "../components/SkeletonLoader";
+import { setAllPosts, setLoading as setPostLoading } from "../store/postSlice";
 
 export default function Home() {
   const { fetchAllPosts } = useGlobalContext();
   const { allPosts, loading } = useSelector(s => s.post);
+  const dispatch = useDispatch();
+
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const loadPosts = async () => {
+    if (!hasMore) return;
+
+    if (page === 1) {
+      dispatch(setPostLoading(true));
+    } else {
+      setLoadingMore(true);
+    }
+
+    const data = await fetchAllPosts(page);
+    
+    if(page === 1) {
+      dispatch(setAllPosts(data.posts));
+    } else {
+      dispatch(setAllPosts([...allPosts, ...data.posts]));
+    }
+
+    setHasMore(data.hasMore);
+    dispatch(setPostLoading(false));
+    setLoadingMore(false);
+  };
 
   useEffect(() => {
-    fetchAllPosts();
-  }, [fetchAllPosts]);
+    loadPosts();
+  }, [page]);
 
   if (loading) {
     return (
@@ -41,6 +69,14 @@ export default function Home() {
       {allPosts.map(post => (
         <PostCard key={post._id} post={post} />
       ))}
+
+      {hasMore && (
+        <div className="flex justify-center">
+          <button onClick={() => setPage(prev => prev + 1)} className={`px-4 py-2 ${loadingMore ? "text-purple-600 text-lg font-semibold" : "bg-purple-600 text-white rounded hover:bg-purple-700 cursor-pointer"}`}>
+            {loadingMore ? "Loading..." : "Load More"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

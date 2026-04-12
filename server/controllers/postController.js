@@ -20,16 +20,13 @@ export const createPost = async (req, res) => {
       return res.status(400).json({ message: "Maximum 5 media files allowed" });
     }
 
-    const uploadedMedia = [];
-
-    for (const file of req.files) {
-      const uploadResult = await cloudinaryUpload(file.path, "posts");
-      uploadedMedia.push({
-        url: uploadResult.url,
-        type: uploadResult.type
-      });
-      fs.unlinkSync(file.path);
-    }
+    const uploadedMedia = await Promise.all(
+      req.files.map(async (file) => {
+        const result = await cloudinaryUpload(file.path, "posts");
+        fs.unlinkSync(file.path);
+        return { url: result.url, type: result.type };
+      })
+    );
 
     const post = await Post.create({
       caption,
@@ -49,10 +46,26 @@ export const createPost = async (req, res) => {
 // GET ALL POSTS
 export const getAllPosts = async (req, res) => {
   try {
-    const posts = await Post.find()
+    const page = Number(req.query.page) || 1;
+    const limit = 2;
+    const skip = (page - 1) * limit;
+
+    const posts = await Post.find({}, "media caption likes comments createdAt postedBy")
       .populate("postedBy", "fullname username profileImage followers following")
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
+
+    const total = await Post.countDocuments();
+
+    const user = await User.findById(req.user._id).select("savedPosts");
+
+    const savedSet = new Set(
+      user.savedPosts.map(id => id.toString())
+    );
+
+    const userIdStr = req.user._id.toString();
 
     const formattedPosts = posts.map(post => ({
       _id: post._id,
@@ -62,15 +75,18 @@ export const getAllPosts = async (req, res) => {
       createdAt: post.createdAt,
       likesCount: post.likes.length,
       commentsCount: post.comments.length,
-      isLikedByMe: post.likes.some(l => l.toString() === req.user._id.toString()),
-      isSavedByMe: req.user.savedPosts.includes(post._id),
+      isLikedByMe: post.likes.some(id => id.toString() === userIdStr),
+      isSavedByMe: savedSet.has(post._id.toString()),
       isFollowingByMe: post.postedBy.followers?.some(
         f => f.toString() === req.user._id.toString()
       ),
-      followsMe: post.postedBy.following?.some(f => f.toString() === req.user._id.toString()),
+      followsMe: post.postedBy.following?.some(f => f.toString() === userIdStr),
     }));
 
-    res.status(200).json({ posts: formattedPosts });
+    res.status(200).json({ 
+      posts: formattedPosts,
+      hasMore: page * limit < total
+    });
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch posts" });
   }
@@ -105,7 +121,10 @@ export const getMyPosts = async (req, res) => {
 export const getMyFeedPosts = async (req, res) => {
   try {
     const userId = req.user._id;
-
+    const page = Number(req.query.page) || 1;
+    const limit = 2;
+    const skip = (page - 1) * limit;
+    
     const user = await User.findById(userId).select("following savedPosts");
 
     const usersToShow = [...user.following, userId];
@@ -114,10 +133,16 @@ export const getMyFeedPosts = async (req, res) => {
 
     const posts = await Post.find({
       postedBy: { $in: usersToShow }
-    })
+    }, "media caption likes comments createdAt postedBy")
       .populate("postedBy", "fullname username profileImage followers following")
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
+
+    const total = await Post.countDocuments({
+      postedBy: { $in: usersToShow }
+    });
 
     const formattedPosts = posts.map(post => ({
       _id: post._id,
@@ -127,15 +152,18 @@ export const getMyFeedPosts = async (req, res) => {
       createdAt: post.createdAt,
       likesCount: post.likes.length,
       commentsCount: post.comments.length,
-      isLikedByMe: post.likes.some(l => l.toString() === req.user._id.toString()),
+      isLikedByMe: post.likes.some(l => l.toString() === userId.toString()),
       isSavedByMe: savedSet.has(post._id.toString()),
       isFollowingByMe: post.postedBy.followers?.some(
-        f => f.toString() === req.user._id.toString()
+        f => f.toString() === userId.toString()
       ),
-      followsMe: post.postedBy.following?.some(f => f.toString() === req.user._id.toString()),
+      followsMe: post.postedBy.following?.some(f => f.toString() === userId.toString()),
     }));  
 
-    return res.status(200).json({ posts: formattedPosts });
+    return res.status(200).json({ 
+      posts: formattedPosts,
+      hasMore: page * limit < total 
+    });
   } catch (error) {
     return res.status(500).json({
       message: "Failed to fetch feed"
@@ -212,10 +240,16 @@ export const getLikedPosts = async (req, res) => {
 
     const posts = await Post.find({
       likes: userId
-    })
+    }, "media caption likes comments createdAt postedBy")
       .populate("postedBy", "username profileImage")
       .sort({ createdAt: -1 })
       .lean();
+
+    const user = await User.findById(userId).select("savedPosts");
+
+    const savedSet = new Set(
+      user.savedPosts.map(id => id.toString())
+    );
 
     const formattedPosts = posts.map(post => ({
       _id: post._id,
@@ -226,7 +260,7 @@ export const getLikedPosts = async (req, res) => {
       likesCount: post.likes.length,
       commentsCount: post.comments.length,
       isLikedByMe: true, 
-      isSavedByMe: req.user.savedPosts.includes(post._id),
+      isSavedByMe: savedSet.has(post._id.toString()),
     }));
 
     return res.status(200).json({posts: formattedPosts});

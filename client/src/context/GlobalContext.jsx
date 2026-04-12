@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useCallback } from "react";
+import { createContext, useContext, useEffect, useCallback, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import Axios from "../api/axiosApi";
 import summaryApi from "../api/summaryApi";
@@ -17,8 +17,6 @@ import {
   setLoading as setUserLoading
 } from "../store/userSlice";
 import {
-  setAllPosts,
-  setFeedPosts,
   setProfilePosts,
   setLikedPosts,
   setSavedPosts,
@@ -27,7 +25,8 @@ import {
   resetPosts,
   setLoading as setPostLoading,
   incrementCommentsCount,
-  decrementCommentsCount
+  decrementCommentsCount,
+  removeCommentFromPost
 } from "../store/postSlice";
 
 export const GlobalContext = createContext(null);
@@ -286,25 +285,23 @@ const GlobalProvider = ({ children }) => {
   };
 
   // POST ACTIONS
-  const fetchAllPosts = useCallback(async () => {
-    dispatch(setPostLoading(true));
-    try {
-      const data = await apiRequest(summaryApi.getAllPosts);
-      dispatch(setAllPosts(data.posts));
-    } finally {
-      dispatch(setPostLoading(false));
-    }
-  });
+  const fetchAllPosts = useCallback(async (page = 1) => {
+    const data = await apiRequest({
+      ...summaryApi.getAllPosts,
+      url: `/api/post/all-posts?page=${page}`
+    });
 
-  const fetchFeedPosts = useCallback(async () => {
-    dispatch(setPostLoading(true));
-    try {
-      const data = await apiRequest(summaryApi.getMyFeedPosts);
-      dispatch(setFeedPosts(data.posts));
-    } finally {
-      dispatch(setPostLoading(false));
-    }
-  });
+    return data;
+  }, []);
+
+  const fetchFeedPosts = useCallback(async (page = 1) => {
+    const data = await apiRequest({
+      ...summaryApi.getMyFeedPosts,
+      url: `/api/post/my-feed-posts?page=${page}`
+    });
+
+    return data;
+  }, []);
 
   const fetchProfilePosts = async (userId) => {
     dispatch(setPostLoading(true));
@@ -419,40 +416,40 @@ const GlobalProvider = ({ children }) => {
     initialize();
   }, []);
 
+  const value = useMemo(() => ({
+    login,
+    register,
+    logout,
+    forgotPassword,
+    resetPassword,
+    fetchMyProfile,
+    fetchPublicProfile,
+    updateProfileImage,
+    deleteProfileImage,
+    updateProfileDetails,
+    changePassword,
+    deleteAccount,
+    followUser,
+    unfollowUser,
+    fetchFollowers,
+    fetchFollowing,
+    fetchAllPosts,
+    fetchFeedPosts,
+    fetchProfilePosts,
+    createPost,
+    toggleLike,
+    toggleSave,
+    fetchLikedPosts,
+    fetchSavedPosts,
+    fetchComments,
+    addComment,
+    deleteComment,
+    fetchMyComments,
+    deletePost
+  }), [authUser]);
+
   return (
-    <GlobalContext.Provider 
-      value={{ 
-        login,
-        register,
-        logout,
-        forgotPassword,
-        resetPassword,
-        fetchMyProfile,
-        fetchPublicProfile,
-        updateProfileImage,
-        deleteProfileImage,
-        updateProfileDetails,
-        changePassword,
-        deleteAccount,
-        followUser,
-        unfollowUser,
-        fetchFollowers,
-        fetchFollowing,
-        fetchAllPosts,
-        fetchFeedPosts,
-        fetchProfilePosts,
-        createPost,
-        toggleLike,
-        toggleSave,
-        fetchLikedPosts,
-        fetchSavedPosts,
-        fetchComments,
-        addComment,
-        deleteComment,
-        fetchMyComments,
-        deletePost
-      }}
-    >
+    <GlobalContext.Provider value={ value }>
       {children}
     </GlobalContext.Provider>
   );

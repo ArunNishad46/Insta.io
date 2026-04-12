@@ -132,7 +132,7 @@ export const refreshToken = async (req, res) => {
       process.env.REFRESH_TOKEN_SECRET
     );
 
-    const user = await User.findById(decoded.userId);
+    const user = await User.findById(decoded.userId).select("_id refreshToken");
     if (!user || !user.refreshToken) {
       return res.status(403).json({ message: "Invalid refresh token" });
     }

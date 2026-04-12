@@ -22,7 +22,7 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
-export default function PostCard({ post }) {
+const PostCard = ({ post }) => {
   const { toggleLike, toggleSave, followUser, unfollowUser, deletePost } = useGlobalContext();
   const authUser = useSelector(s => s.auth.user);
   const dispatch = useDispatch();
@@ -248,3 +248,4 @@ export default function PostCard({ post }) {
   );
 }
 
+export default React.memo(PostCard);

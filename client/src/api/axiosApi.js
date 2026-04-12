@@ -1,5 +1,9 @@
 import axios from 'axios';
 import summaryApi from './summaryApi';
+import store from "../store/store";
+import { logoutUser } from "../store/authSlice";
+import { resetUser } from "../store/userSlice";
+import { resetPosts } from "../store/postSlice";
 
 const Axios = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -30,7 +34,9 @@ Axios.interceptors.response.use(
         await refreshPromise;
         return Axios(originalReq);
       } catch (err) {
-        window.location.href = "/login";
+        store.dispatch(logoutUser());
+        store.dispatch(resetUser());
+        store.dispatch(resetPosts());
         return Promise.reject(err);
       }
     }
