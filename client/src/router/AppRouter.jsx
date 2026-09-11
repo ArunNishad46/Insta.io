@@ -21,139 +21,106 @@ export default function AppRouter() {
   
   return (
     <div>
-      <Suspense fallback={<div className="p-4 text-center text-purple-700 text-lg font-semibold">Loading...</div>}>
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-purple-600" />
+        </div>
+      }>
         <Routes>
-          {isAuthenticated ? (
+          {/* Public Routes */}
+          {!isAuthenticated && (
             <>
-              <Route 
-                path="/" 
-                element={
-                  <ProtectedRoute>
-                    <Home />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/me" 
-                element={
-                  <ProtectedRoute>
-                    <Profile isSelf={true} />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/user/:username" 
-                element={
-                  <ProtectedRoute>
-                    <Profile isSelf={false} />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/following-posts" 
-                element={
-                  <ProtectedRoute>
-                    <FollowingPost />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/create-post" 
-                element={
-                  <ProtectedRoute>
-                    <CreatePost />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/me/followers" 
-                element={
-                  <ProtectedRoute>
-                    <FollowPage tab="followers" isSelf={true} />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/me/following" 
-                element={
-                  <ProtectedRoute>
-                    <FollowPage tab="following" isSelf={true} />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/user/:username/followers" 
-                element={
-                  <ProtectedRoute>
-                    <FollowPage tab="followers" />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/user/:username/following" 
-                element={
-                  <ProtectedRoute>
-                    <FollowPage tab="following" />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/post-preview/:type" 
-                element={
-                  <ProtectedRoute>
-                    <PostPreview />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/settings" 
-                element={
-                  <ProtectedRoute>
-                    <Settings />
-                  </ProtectedRoute>
-                } 
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route
+                path="/forgot-password"
+                element={<ForgotPassword />}
               />
               <Route
-                path="*"
-                element={
-                  <ProtectedRoute>
-                    <Navigate to="/" replace />
-                  </ProtectedRoute>
-              }
+                path="/reset-password/:token"
+                element={<ResetPassword />}
               />
-            </>
-          ) : (
-            <>
-              <Route 
-                path="/login" 
-                element={
-                  <Login />
-                } 
-              />
-              <Route 
-                path="/signup" 
-                element={
-                  <SignUp />
-                } 
-              />
-              <Route 
-                path="/forgot-password" 
-                element={
-                  <ForgotPassword />
-                } 
-              />
-              <Route 
-                path="/reset-password/:token" 
-                element={
-                  <ResetPassword />
-                } 
-              />
+
               <Route
                 path="*"
                 element={<Navigate to="/login" replace />}
               />
             </>
-          )};
+          )}
+
+          {/* Protected Routes */}
+          {isAuthenticated && (
+            <Route element={<ProtectedRoute />}>
+              
+              <Route path="/" element={<Home />} />
+              
+              <Route
+                path="/me"
+                element={<Profile isSelf={true} />}
+              />
+
+              <Route
+                path="/user/:username"
+                element={<Profile isSelf={false} />}
+              />
+
+              <Route
+                path="/following-posts"
+                element={<FollowingPost />}
+              />
+
+              <Route
+                path="/create-post"
+                element={<CreatePost />}
+              />
+
+              <Route
+                path="/me/followers"
+                element={
+                  <FollowPage
+                    tab="followers"
+                    isSelf={true}
+                  />
+                }
+              />
+
+              <Route
+                path="/me/following"
+                element={
+                  <FollowPage
+                    tab="following"
+                    isSelf={true}
+                  />
+                }
+              />
+
+              <Route
+                path="/user/:username/followers"
+                element={<FollowPage tab="followers" />}
+              />
+
+              <Route
+                path="/user/:username/following"
+                element={<FollowPage tab="following" />}
+              />
+
+              <Route
+                path="/post-preview/:type"
+                element={<PostPreview />}
+              />
+
+              <Route
+                path="/settings"
+                element={<Settings />}
+              />
+
+              <Route
+                path="*"
+                element={<Navigate to="/" replace />}
+              />
+
+            </Route>
+          )}
         </Routes>
       </Suspense>
     </div>
